@@ -63,8 +63,6 @@ class UserService
     {
         $validate = Validate::rule([
             'username' => 'require|length:3,50|unique:user',
-            'password' => 'require|length:6,20',
-            'email' => 'require|email|unique:user',
             'birthday' => 'date'
         ]);
 
@@ -74,8 +72,6 @@ class UserService
 
         $user = new User;
         $user->username = $data['username'];
-        $user->password = password_hash($data['password'], PASSWORD_DEFAULT);
-        $user->email = $data['email'];
         $user->birthday = $data['birthday'] ?? null;
         $user->save();
 
@@ -95,6 +91,7 @@ class UserService
             throw new Exception('用户不存在', 404);
         }
 
+        // 验证数据
         $validate = Validate::rule([
             'email' => 'email|unique:user,email,' . $id,
             'password' => 'length:6,20',
@@ -105,11 +102,28 @@ class UserService
             throw new Exception($validate->getError(), 400);
         }
 
+        // 只更新提供的字段
         if (isset($data['password'])) {
             $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
         }
 
-        $user->save($data);
+        // 更新用户信息
+        if (isset($data['username'])) {
+            $user->username = $data['username'];
+        }
+        if (isset($data['email'])) {
+            $user->email = $data['email'];
+        }
+        if (isset($data['birthday'])) {
+            error_log("Birthday before save: " . $data['birthday']);
+            $user->birthday = $data['birthday'];
+        }
+
+        // 调试信息
+        error_log("Updating user: " . print_r($user, true));
+        
+        $user->save();
+
         return $user;
     }
 

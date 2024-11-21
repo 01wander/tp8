@@ -17,6 +17,8 @@ Route::group('user', function () {
     Route::get(':id', 'User/read');
     // 获取用户列表
     Route::get('', 'User/index');
+    // 检查生日
+    Route::get('check-birthdays', 'User/checkBirthdays');
 });
 
 // 后台路由

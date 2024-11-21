@@ -23,4 +23,16 @@ class User extends Model
     {
         return password_hash($value, PASSWORD_DEFAULT);
     }
+
+    /**
+     * 自定义 whereRaw 方法
+     *
+     * @param string $query
+     * @param array $bindings
+     * @return \think\db\Query
+     */
+    public static function whereRaw($query, $bindings = [])
+    {
+        return self::whereRaw($query, $bindings);
+    }
 } 
