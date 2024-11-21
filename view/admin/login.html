@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>后台登录</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+        .login-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f3f3f3;
+        }
+        .login-box {
+            width: 400px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 4px;
+            box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+        }
+        .login-title {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="login-container">
+            <div class="login-box">
+                <h2 class="login-title">后台管理系统</h2>
+                <el-form :model="loginForm" :rules="rules" ref="loginForm">
+                    <el-form-item prop="username">
+                        <el-input v-model="loginForm.username" placeholder="用户名"></el-input>
+                    </el-form-item>
+                    <el-form-item prop="password">
+                        <el-input type="password" v-model="loginForm.password" placeholder="密码"></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="handleLogin" style="width: 100%">登录</el-button>
+                    </el-form-item>
+                </el-form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@2/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    loginForm: {
+                        username: '',
+                        password: ''
+                    },
+                    rules: {
+                        username: [
+                            { required: true, message: '请输入用户名', trigger: 'blur' }
+                        ],
+                        password: [
+                            { required: true, message: '请输入密码', trigger: 'blur' }
+                        ]
+                    }
+                }
+            },
+            methods: {
+                handleLogin() {
+                    this.$refs.loginForm.validate(valid => {
+                        if (valid) {
+                            axios.post('/user/login', this.loginForm)
+                                .then(response => {
+                                    if (response.data.code === 200) {
+                                        localStorage.setItem('token', response.data.data.token);
+                                        window.location.href = '/admin/users';
+                                    } else {
+                                        this.$message.error(response.data.msg);
+                                    }
+                                })
+                                .catch(error => {
+                                    this.$message.error('登录失败');
+                                });
+                        }
+                    });
+                }
+            }
+        })
+    </script>
+</body>
+</html> 

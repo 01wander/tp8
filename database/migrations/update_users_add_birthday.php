@@ -1,0 +1,1 @@
+ALTER TABLE `user` ADD COLUMN `birthday` date DEFAULT NULL COMMENT '生日'; 

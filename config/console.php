@@ -5,5 +5,6 @@
 return [
     // 指令定义
     'commands' => [
+        'birthday:remind' => 'app\command\BirthdayReminder',
     ],
 ];
