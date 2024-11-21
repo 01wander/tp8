@@ -86,6 +86,8 @@ class User extends BaseController
      */
     public function delete($id)
     {
+        $id = (int)$id;
+        
         try {
             $this->userService->delete($id);
             return json(['code' => 200, 'msg' => '删除成功']);

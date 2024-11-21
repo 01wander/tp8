@@ -81,11 +81,11 @@
                             { min: 3, max: 50, message: '长度在 3 到 50 个字符', trigger: 'blur' }
                         ],
                         email: [
-                            { required: true, message: '请输入邮箱', trigger: 'blur' },
+                            { required: false, message: '请输入邮箱', trigger: 'blur' },
                             { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
                         ],
                         password: [
-                            { required: true, message: '请输入密码', trigger: 'blur' },
+                            { required: false, message: '请输入密码', trigger: 'blur' },
                             { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
                         ]
                     }
@@ -123,12 +123,17 @@
                     this.$confirm('确认删除该用户?', '提示', {
                         type: 'warning'
                     }).then(() => {
-                        axios.delete(`/user/${row.id}`)
+                        axios.delete(`/user/${parseInt(row.id)}`)
                             .then(response => {
                                 if (response.data.code === 200) {
                                     this.$message.success('删除成功');
                                     this.getUsers();
+                                } else {
+                                    this.$message.error(response.data.msg || '删除失败');
                                 }
+                            })
+                            .catch(error => {
+                                this.$message.error('删除失败：' + error.message);
                             });
                     });
                 },

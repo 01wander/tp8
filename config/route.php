@@ -28,3 +28,5 @@ Route::group('admin', function () {
         return view('admin/users');
     });
 });
+
+Route::post('wechat', 'Wechat/index');
