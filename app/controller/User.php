@@ -6,7 +6,9 @@ namespace app\controller;
 use app\BaseController;
 use app\model\User as ModelUser;
 use app\service\UserService;
+use app\service\WechatService;
 use think\Exception;
+use think\facade\Config;
 
 /**
  * 用户控制器
@@ -74,13 +76,13 @@ class User extends BaseController
             error_log("Received ID: " . $id);
             $id = (int)$id;
             $data = request()->put();
-            
+
             if (empty($data)) {
                 throw new Exception('更新数据不能为空', 400);
             }
-            
+
             error_log("Update data: " . print_r($data, true));
-            
+
             $user = $this->userService->update($id, $data);
             return json(['code' => 200, 'msg' => '更新成功', 'data' => $user]);
         } catch (Exception $e) {
@@ -98,7 +100,7 @@ class User extends BaseController
     public function delete($id)
     {
         $id = (int)$id;
-        
+
         try {
             $this->userService->delete($id);
             return json(['code' => 200, 'msg' => '删除成功']);
@@ -107,21 +109,6 @@ class User extends BaseController
         }
     }
 
-    /**
-     * 获取单个用户信息
-     * @param int $id 用户ID
-     * @return \think\Response\Json
-     * @route GET /user/:id
-     */
-    public function read($id)
-    {
-        try {
-            $user = $this->userService->get($id);
-            return json(['code' => 200, 'msg' => '获取成功', 'data' => $user]);
-        } catch (Exception $e) {
-            return json(['code' => $e->getCode() ?: 500, 'msg' => $e->getMessage()]);
-        }
-    }
 
     /**
      * 获取用户列表
@@ -139,35 +126,49 @@ class User extends BaseController
         }
     }
 
+    /**
+     * 检查今天是否有用户过生日并发送祝福消息
+     *
+     * 该方法首先确定今天的日期，然后查询数据库中今天过生日的用户
+     * 如果没有用户过生日，则返回相应消息
+     * 如果有用户过生日，则调用发送消息的方法，向指定的OpenID发送生日祝福
+     *
+     * @return \Illuminate\Http\JsonResponse|\think\response\Json
+     */
     public function checkBirthdays()
     {
         try {
-            // 获取今天的日期
-            $today = date('Y-m-d');
-            
-            // 查询今天过生日的用户
-            $users = ModelUser::whereRaw('DATE(birthday) = ?', [$today])->get();
+            // 获取今天的月份和日
+            $today = date('m-d');
 
-            if ($users->isEmpty()) {
+            // 查询今天过生日的用户，忽略年份
+            $users = ModelUser::whereRaw('DATE_FORMAT(birthday, "%m-%d") = ?', [$today])->select()->toArray();
+
+            // 检查是否有用户今天过生日
+            if (empty($users)) {
+                // 如果没有用户过生日，返回相应的消息
                 return json(['code' => 200, 'msg' => '今天没有过生日的用户']);
             }
 
             // 推送消息到指定的 OpenID
             $this->sendBirthdayMessage($users, 'ob6qz6i3KhO3uq6I4WOXbeuNfzoQ');
 
+            // 生日祝福发送成功，返回相应的消息
             return json(['code' => 200, 'msg' => '生日祝福已发送']);
         } catch (Exception $e) {
+            // 捕获异常，返回错误代码和错误信息
             return json(['code' => $e->getCode() ?: 500, 'msg' => $e->getMessage()]);
         }
     }
 
     private function sendBirthdayMessage($users, $openid)
     {
+
         foreach ($users as $user) {
             $message = [
                 'first' => ['value' => '祝您生日快乐！', 'color' => '#173177'],
-                'user_name' => ['value' => $user->username, 'color' => '#173177'],
-                'birthday' => ['value' => date('Y-m-d', strtotime($user->birthday)), 'color' => '#173177'],
+                'user_name' => ['value' => $user['username'], 'color' => '#173177'],
+                'birthday' => ['value' => date('Y-m-d', strtotime($user['birthday'])), 'color' => '#173177'],
                 'remark' => ['value' => '祝您生活愉快！', 'color' => '#173177'],
             ];
 
@@ -179,8 +180,12 @@ class User extends BaseController
 
     private function sendTemplateMessage($openid, $data)
     {
-        $templateId = 'YOUR_TEMPLATE_ID'; // 替换为您的模板 ID
-        $url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=YOUR_ACCESS_TOKEN";
+        
+        $weChatService = new WeChatService();
+        $accessToken = $weChatService->getAccessToken();
+
+        $url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={$accessToken}";
+        $templateId = Config::get('wechat.birthday_template_id'); // 替换为您的模板 ID
 
         $postData = [
             'touser' => $openid,

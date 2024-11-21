@@ -27,6 +27,7 @@ Route::group('api', function () {
         Route::post('create', 'User/create');
         Route::put('update/:id', 'User/update');
         Route::delete('delete/:id', 'User/delete');
+        Route::get('check-birthdays/:id', 'User/checkBirthdays');
     })->middleware('CheckLogin');
 });
 

@@ -13,8 +13,7 @@ Route::group('user', function () {
     Route::put(':id', 'User/update');
     // 删除用户
     Route::delete(':id', 'User/delete');
-    // 获取单个用户信息
-    Route::get(':id', 'User/read');
+
     // 获取用户列表
     Route::get('', 'User/index');
     // 检查生日
